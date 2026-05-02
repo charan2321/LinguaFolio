@@ -11,3 +11,9 @@ coverage/
 
 .cursor/
 .cursorrules
+
+# Ignore nested frontend repo and local config
+frontend/
+.vscode/
+backend/railway.json
+"linguafolio_final (2).html"
