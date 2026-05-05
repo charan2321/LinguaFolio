@@ -23,24 +23,24 @@ app.get("/ready", (_req, res) => {
   });
 });
 
-app.use(helmet());
-const allowedOrigins = env.CORS_ORIGINS
-  .split(",")
-  .map((item) => item.trim())
-  .filter(Boolean);
+app.use((helmet as unknown as () => any)());
+app.use(cors({
+  origin: [
+    "https://frontend-gamma-hazel-1nw9r3172x.vercel.app",
+    "https://frontend-7ko9rb6i-charus-projects-f5d15d88.vercel.app",
+    "http://localhost:3000",
+    "http://localhost:5173"
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  credentials: true
+}));
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-        return;
-      }
-      callback(new Error("CORS blocked by server"));
-    },
-    credentials: true
-  })
-);
+app.options("*", cors());
+
+// Test route for CORS
+app.get("/test", (req, res) => {
+  res.json({ message: "CORS working" });
+});
 app.use(cookieParser());
 app.use(
   express.json({
@@ -71,14 +71,15 @@ app.use((req, _res, next) => {
 });
 if (env.NODE_ENV === "development") app.use(morgan("dev"));
 
-const globalLimiter = rateLimit({
+const rateLimitFactory = rateLimit as unknown as (options: Record<string, unknown>) => any;
+const globalLimiter = rateLimitFactory({
   windowMs: 60_000,
   max: 100,
   standardHeaders: true,
   legacyHeaders: false
 });
 
-const authLimiter = rateLimit({
+const authLimiter = rateLimitFactory({
   windowMs: 60_000,
   max: 100,
   standardHeaders: true,
@@ -87,9 +88,9 @@ const authLimiter = rateLimit({
 });
 
 app.use("/api", globalLimiter);
-app.use("/api/v1/auth", authLimiter);
+app.use("/api/auth", authLimiter);
 app.use("/uploads", express.static("uploads"));
-app.use("/api/v1", router);
+app.use("/api", router);
 
 // ── Root health check ──────────────────────────────────────────────────────
 app.get("/", (_req, res) => {
@@ -133,5 +134,7 @@ app.get("/", (_req, res) => {
     },
   });
 });
+
+app.use((req, res) => res.status(404).json({ success: false, error: { message: "Route not found", code: "NOT_FOUND" } }));
 
 app.use(errorHandler);
