@@ -288,7 +288,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Listen for auth state changes (fired on login, logout, and token refresh)
-  const { data: { subscription } } = _sb.auth.onAuthStateChange(async (_event, session) => {
+  _sb.auth.onAuthStateChange(async (_event, session) => {
     if (session?.user) {
       currentUser = {
         ...session.user,
@@ -299,29 +299,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 });
 
-// Cleanup subscription on page unload
-window.addEventListener('beforeunload', () => {
-  // Subscription cleanup will happen automatically
-});
-      currentUser = {
-        ...session.user,
-        access_token: session.access_token
-      };
+// Expose auth functions globally for HTML onclick handlers
+window.handleSignin = handleSignin;
+window.handleSignup = handleSignup;
+window.handleLogout = handleLogout;
+window.socialLogin = socialLogin;
+window.handleForgot = handleForgot;
+window.setLoggedIn = setLoggedIn;
 
-      console.log('[auth] ✅ Auth state updated. userId:', currentUser.id);
-      console.log('[auth] ✅ access_token present:', !!currentUser.access_token);
-
-      setLoggedIn(currentUser);
-    } else {
-      console.log('[auth] Session ended — clearing currentUser.');
-      currentUser = null;
-    }
-  });
-
-  // Cleanup on page unload
-  window.addEventListener('beforeunload', () => {
-    if (subscription) subscription.unsubscribe();
-  });
-
-  console.log('✅ Auth system initialized');
-});
+console.log('✅ Auth system initialized');
