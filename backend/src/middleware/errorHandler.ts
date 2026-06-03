@@ -1,4 +1,3 @@
-import fs from "fs";
 import { NextFunction, Request, Response } from "express";
 import { sendError } from "../utils/response.js";
 
@@ -8,11 +7,12 @@ export const errorHandler = (
   res: Response,
   _next: NextFunction
 ): Response => {
+  // Log to console only; avoid writing to the filesystem in production
   if (process.env.NODE_ENV !== "production") {
     console.error("API error:", err);
-    try {
-      fs.appendFileSync("error.log", new Date().toISOString() + "\\n" + (err.stack || err.message) + "\\n\\n");
-    } catch(e) {}
+  } else {
+    // In production, keep logs minimal to stdout/stderr for platform log aggregation
+    console.error(err && err.stack ? err.stack : err);
   }
 
   let statusCode = err.statusCode ?? 500;

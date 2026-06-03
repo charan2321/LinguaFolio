@@ -15,26 +15,27 @@ app.get("/health", (_req, res) => {
 });
 
 app.use((helmet as unknown as () => any)());
+const parseOrigins = (val: string) =>
+  val
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (e.g., curl, server-to-server)
     if (!origin) return callback(null, true);
-    
-    const productionOrigins = [
-      "https://frontend-gamma-hazel-1nw9r3172x.vercel.app",
-      "https://frontend-7ko9rb6i-charus-projects-f5d15d88.vercel.app"
-    ];
-    
+
+    const configured = parseOrigins(env.CORS_ORIGINS || env.CLIENT_URL || '');
+
     const developmentOrigins = [
       "http://localhost:3000",
       "http://localhost:5173",
       "http://localhost:5500"
     ];
-    
-    const allowed = env.NODE_ENV === 'development' 
-      ? [...productionOrigins, ...developmentOrigins]
-      : productionOrigins;
-    
+
+    const allowed = env.NODE_ENV === 'development' ? [...configured, ...developmentOrigins] : configured;
+
     if (allowed.includes(origin)) {
       return callback(null, true);
     }
