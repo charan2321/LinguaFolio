@@ -4,7 +4,6 @@ import express from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import morgan from "morgan";
-import mongoose from "mongoose";
 import { env } from "./config/env.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { router } from "./router.js";
@@ -15,32 +14,38 @@ app.get("/health", (_req, res) => {
   res.status(200).json({ success: true, data: { status: "ok" } });
 });
 
-app.get("/ready", (_req, res) => {
-  const isReady = mongoose.connection.readyState === 1;
-  res.status(isReady ? 200 : 503).json({
-    success: isReady,
-    data: { mongoReady: isReady }
-  });
-});
-
 app.use((helmet as unknown as () => any)());
 app.use(cors({
-  origin: [
-    "https://frontend-gamma-hazel-1nw9r3172x.vercel.app",
-    "https://frontend-7ko9rb6i-charus-projects-f5d15d88.vercel.app",
-    "http://localhost:3000",
-    "http://localhost:5173"
-  ],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (e.g., curl, server-to-server)
+    if (!origin) return callback(null, true);
+    
+    const productionOrigins = [
+      "https://frontend-gamma-hazel-1nw9r3172x.vercel.app",
+      "https://frontend-7ko9rb6i-charus-projects-f5d15d88.vercel.app"
+    ];
+    
+    const developmentOrigins = [
+      "http://localhost:3000",
+      "http://localhost:5173",
+      "http://localhost:5500"
+    ];
+    
+    const allowed = env.NODE_ENV === 'development' 
+      ? [...productionOrigins, ...developmentOrigins]
+      : productionOrigins;
+    
+    if (allowed.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true
 }));
 
-app.options("*", cors());
+app.options(/.*/, cors());
 
-// Test route for CORS
-app.get("/test", (req, res) => {
-  res.json({ message: "CORS working" });
-});
 app.use(cookieParser());
 app.use(
   express.json({
@@ -79,18 +84,9 @@ const globalLimiter = rateLimitFactory({
   legacyHeaders: false
 });
 
-const authLimiter = rateLimitFactory({
-  windowMs: 60_000,
-  max: 100,
-  standardHeaders: true,
-  legacyHeaders: false,
-  skipSuccessfulRequests: true
-});
-
 app.use("/api", globalLimiter);
-app.use("/api/auth", authLimiter);
 app.use("/uploads", express.static("uploads"));
-app.use("/api", router);
+app.use("/api/v1", router);
 
 // ── Root health check ──────────────────────────────────────────────────────
 app.get("/", (_req, res) => {
@@ -100,37 +96,20 @@ app.get("/", (_req, res) => {
     environment: process.env.NODE_ENV || "development",
     timestamp: new Date().toISOString(),
     endpoints: {
-      auth: {
-        register:       "POST /api/v1/auth/register",
-        login:          "POST /api/v1/auth/login",
-        logout:         "POST /api/v1/auth/logout",
-        refresh:        "POST /api/v1/auth/refresh",
-        forgot_password:"POST /api/v1/auth/forgot-password",
-        verify_otp:     "POST /api/v1/auth/otp/verify",
-        send_otp:       "POST /api/v1/auth/otp/send",
-        reset_password: "POST /api/v1/auth/reset-password",
+      architecture: "Supabase-first frontend with Express fallback for secure operations",
+      client_handled: {
+        auth: "Supabase SDK (_sb.auth)",
+        users: "Supabase SDK (profiles table)",
+        books: "Supabase SDK (books table)",
+        admin: "Supabase SDK (_adminSb)"
       },
-      users: {
-        me:             "GET  /api/v1/users/me",
-        update_me:      "PATCH /api/v1/users/me",
-        activity:       "GET  /api/v1/users/me/activity",
-        ping:           "POST /api/v1/users/me/activity/ping",
-        stats:          "GET  /api/v1/users/me/stats",
-        all_users:      "GET  /api/v1/users (admin only)",
-      },
-      books: {
-        list:           "GET  /api/v1/books",
-        get_one:        "GET  /api/v1/books/:id",
-        create:         "POST /api/v1/books (admin only)",
-        update:         "PUT  /api/v1/books/:id (admin only)",
-        delete:         "DELETE /api/v1/books/:id (admin only)",
-        read_pdf:       "GET  /api/v1/books/:id/read (auth required)",
-      },
-      payments: {
-        create_order:   "POST /api/v1/payments/create-order",
-        verify:         "POST /api/v1/payments/verify",
-        history:        "GET  /api/v1/payments/history",
-      },
+      server_handled: {
+        payments: {
+          create_order: "POST /api/v1/payments/create-order",
+          verify:       "POST /api/v1/payments/verify",
+          webhook:      "POST /api/v1/payments/webhook"
+        }
+      }
     },
   });
 });

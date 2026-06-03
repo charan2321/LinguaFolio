@@ -6,7 +6,13 @@ dotenv.config();
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().default(5000),
-  MONGODB_URI: z.string().min(1),
+  MONGODB_URI: z.string().min(1).optional().default("mongodb://localhost:27017/linguastar"),
+  SUPABASE_URL: z.string().url().optional(),
+  SUPABASE_ANON_KEY: z.string().min(1).optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
+  // JWT secret from Supabase: Settings → API → JWT Secret
+  // Required so the backend can verify Supabase-issued access tokens
+  SUPABASE_JWT_SECRET: z.string().min(1).optional(),
   JWT_ACCESS_SECRET: z.string().min(32),
   JWT_REFRESH_SECRET: z.string().min(32),
   JWT_ACCESS_EXPIRES_IN: z.string().default("15m"),
@@ -32,9 +38,11 @@ const envSchema = z.object({
 const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {
-  // Fail fast so the app never runs with partial config.
   console.error("Invalid environment variables", parsed.error.flatten().fieldErrors);
-  process.exit(1);
+  // Don't exit in development — allow missing optional vars
+  if (process.env.NODE_ENV === "production") {
+    process.exit(1);
+  }
 }
 
 export const env = parsed.data;

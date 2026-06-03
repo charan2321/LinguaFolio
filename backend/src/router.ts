@@ -1,15 +1,10 @@
 import { Router } from "express";
-// Trigger restart for new env variables
-import { adminRouter } from "./modules/admin/admin.routes.js";
-import { authRouter } from "./modules/auth/auth.routes.js";
-import { bookRouter } from "./modules/books/book.routes.js";
 import { paymentRouter } from "./modules/payments/payment.routes.js";
-import { userRouter } from "./modules/users/user.routes.js";
 
 export const router = Router();
 
-router.use("/auth", authRouter);
-router.use("/users", userRouter);
-router.use("/books", bookRouter);
+// Frontend now uses Supabase SDK directly for Auth, Users, Books, and Admin.
+// Only Payment needs a backend route (for Razorpay order creation & webhooks).
 router.use("/payments", paymentRouter);
-router.use("/admin", adminRouter);
+
+console.log("📌 DEBUG Router.ts: Router stack:", router.stack?.length, "routes");

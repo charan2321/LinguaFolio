@@ -1,7 +1,8 @@
 export const sendSuccess = <T>(res: any, data: T, statusCode = 200): any =>
   res.status(statusCode).json({
     success: true,
-    data
+    data,
+    timestamp: new Date().toISOString()
   });
 
 export const sendError = (
@@ -17,5 +18,6 @@ export const sendError = (
       code,
       message,
       ...(fields ? { fields } : {})
-    }
+    },
+    timestamp: new Date().toISOString()
   });
