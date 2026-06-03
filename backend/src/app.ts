@@ -11,7 +11,7 @@ import { router } from "./router.js";
 export const app = express();
 
 app.get("/health", (_req, res) => {
-  res.status(200).json({ success: true, data: { status: "ok" } });
+  res.status(200).json({ success: true, message: "LinguaFolio API healthy" });
 });
 
 app.use((helmet as unknown as () => any)());
@@ -87,6 +87,12 @@ const globalLimiter = rateLimitFactory({
 
 app.use("/api", globalLimiter);
 app.use("/uploads", express.static("uploads"));
+
+// Health check endpoint for API
+app.get("/api/v1/health", (_req, res) => {
+  res.status(200).json({ success: true, message: "LinguaFolio API healthy" });
+});
+
 app.use("/api/v1", router);
 
 // ── Root health check ──────────────────────────────────────────────────────
