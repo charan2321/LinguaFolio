@@ -3,19 +3,16 @@
 const API_BASE = (() => {
   if (typeof window !== 'undefined' && window.VITE_API_BASE) return window.VITE_API_BASE;
   const hostname = window.location.hostname;
-  const protocol = window.location.protocol;
   
   // Development environments
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
     return 'http://localhost:5005/api/v1';
   }
   
-  // Production - update this with your actual backend domain
-  if (protocol === 'https:') {
-    return 'https://api.linguafolio.com/api/v1';
-  }
-  
-  return 'https://api.linguafolio.com/api/v1';
+  // Production - Railway backend
+  // IMPORTANT: In production, this MUST be set via VITE_API_BASE environment variable
+  // If empty, payment and other API calls will fail
+  return '';
 })();
 
 window.API_BASE = API_BASE;
