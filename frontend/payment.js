@@ -95,11 +95,10 @@ async function processPayment() {
   try {
     showToast('💳 Creating Razorpay order…', 'success');
 
-    const apiBase = getApiBase();
     const headers = await getPaymentHeaders();
 
-    const url = `${apiBase}/payments/create-order`;
-    console.log('[payment] create-order URL:', url);
+    const url = `${window.API_BASE}/payments/create-order`;
+    console.log('[payment] final fetch URL:', url);
 
     const response = await fetch(url, {
       method: 'POST',

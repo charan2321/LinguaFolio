@@ -25,7 +25,7 @@ function copyRecursive(src, dest) {
 // Generate config.prod.js
 const viteUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
 const viteAnon = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '';
-const apiBase = process.env.VITE_API_BASE || process.env.API_BASE || '';
+const apiBase = (process.env.VITE_API_BASE || process.env.API_BASE || '').trim().replace(/\/+$/, '');
 
 if (!viteUrl || !viteAnon) {
   console.warn('Warning: VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY not set. Auth will not work in production.');
