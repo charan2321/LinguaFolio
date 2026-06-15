@@ -25,7 +25,10 @@ function copyRecursive(src, dest) {
 // Generate config.prod.js
 const viteUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
 const viteAnon = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '';
-const apiBase = (process.env.VITE_API_BASE || process.env.API_BASE || '').trim().replace(/\/+$/, '');
+let apiBase = (process.env.VITE_API_BASE || process.env.API_BASE || '').trim().replace(/\/+$/, '');
+if (apiBase === 'https://linguafolio-production.up.railway.app') {
+  apiBase = 'https://linguafolio-production.up.railway.app/api/v1';
+}
 
 if (!viteUrl || !viteAnon) {
   console.warn('Warning: VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY not set. Auth will not work in production.');
@@ -49,6 +52,9 @@ if (!window.VITE_API_BASE) {
 }
 // Backwards compatibility
 window.API_BASE = window.VITE_API_BASE || '';
+if (window.API_BASE === 'https://linguafolio-production.up.railway.app') {
+  window.API_BASE = 'https://linguafolio-production.up.railway.app/api/v1';
+}
 console.log('[config.prod.js] API_BASE configured as:', window.VITE_API_BASE);
 `;
 

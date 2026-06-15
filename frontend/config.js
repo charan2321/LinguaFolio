@@ -6,19 +6,22 @@ const API_BASE = (() => {
   if (typeof window !== 'undefined' && window.VITE_API_BASE) {
     return window.VITE_API_BASE;
   }
-  
+
   // Fallback: compute based on hostname
   const hostname = window.location.hostname;
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
     return 'http://localhost:5005/api/v1';
   }
-  
+
   // Production fallback (should be set by config.prod.js)
   return 'https://linguafolio-production.up.railway.app/api/v1';
 })();
 
 // Ensure it's accessible globally for payment.js and other modules
 window.API_BASE = API_BASE;
+if (window.API_BASE === 'https://linguafolio-production.up.railway.app') {
+  window.API_BASE = 'https://linguafolio-production.up.railway.app/api/v1';
+}
 
 // Supabase Configuration
 window.VITE_SUPABASE_URL = window.VITE_SUPABASE_URL || 'https://luxyimqeaclnyivmmatm.supabase.co';

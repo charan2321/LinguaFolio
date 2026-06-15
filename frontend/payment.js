@@ -97,7 +97,7 @@ async function processPayment() {
 
     const headers = await getPaymentHeaders();
 
-    const url = `${window.API_BASE}/payments/create-order`;
+    const url = `${getApiBase()}/payments/create-order`;
     console.log('[payment] final fetch URL:', url);
 
     const response = await fetch(url, {
