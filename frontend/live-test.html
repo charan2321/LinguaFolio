@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinguaFolio — Live API Test Panel</title>
+  <!-- Outfit Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-dark: #09090b;
+      --card-bg: rgba(20, 20, 25, 0.75);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --gold-accent: #c9922a;
+      --gold-hover: #e5a93c;
+      --gold-glow: rgba(201, 146, 42, 0.25);
+      --text-primary: #f4f4f5;
+      --text-secondary: #a1a1aa;
+      --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.15);
+      --error: #f43f5e;
+      --error-glow: rgba(244, 63, 94, 0.15);
+      --info: #3b82f6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(201, 146, 42, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.03) 0%, transparent 40%);
+      color: var(--text-primary);
+      font-family: 'Outfit', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      flex-grow: 1;
+    }
+
+    /* Header & Badge Bar */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 1.5rem;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+    }
+
+    .logo span {
+      color: var(--gold-accent);
+      text-shadow: 0 0 10px var(--gold-glow);
+    }
+
+    .badges-container {
+      display: flex;
+      gap: 10px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      transition: all 0.3s ease;
+    }
+
+    .badge.pending {
+      border-color: rgba(251, 191, 36, 0.3);
+      color: #fbbf24;
+    }
+
+    .badge.ok {
+      background: var(--success-glow);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: var(--success);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
+    }
+
+    .badge.failed {
+      background: var(--error-glow);
+      border-color: rgba(244, 63, 94, 0.4);
+      color: var(--error);
+      box-shadow: 0 0 10px rgba(244, 63, 94, 0.1);
+    }
+
+    .badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: currentColor;
+    }
+
+    /* Grid Layout */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      align-items: stretch;
+    }
+
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .steps-column {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* Beautiful Cards */
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.5rem;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .card:hover {
+      border-color: rgba(201, 146, 42, 0.2);
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .step-number {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      background: rgba(201, 146, 42, 0.15);
+      border: 1px solid rgba(201, 146, 42, 0.3);
+      color: var(--gold-accent);
+      border-radius: 50%;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    input[type="text"], input[type="email"], input[type="password"] {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    input:focus {
+      border-color: var(--gold-accent);
+      box-shadow: 0 0 0 3px var(--gold-glow);
+    }
+
+    .btn {
+      width: 100%;
+      background: linear-gradient(135deg, var(--gold-accent), #a17019);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 11px 18px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 0.1s ease, filter 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 4px 12px rgba(201, 146, 42, 0.2);
+    }
+
+    .btn:hover {
+      filter: brightness(1.1);
+      box-shadow: 0 4px 15px rgba(201, 146, 42, 0.3);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn:disabled {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-secondary);
+      cursor: not-allowed;
+      border: 1px solid var(--border-color);
+      box-shadow: none;
+      filter: none;
+    }
+
+    /* Terminal Console Panel */
+    .console-card {
+      display: flex;
+      flex-direction: column;
+      min-height: 400px;
+    }
+
+    .console-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .console-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .dot.red { background: #ef4444; }
+    .dot.yellow { background: #f59e0b; }
+    .dot.green { background: #10b981; }
+
+    .console-title {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .clear-console {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .clear-console:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-primary);
+    }
+
+    .console-output {
+      flex-grow: 1;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+      padding: 1rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      overflow-y: auto;
+      max-height: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .log-line {
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .log-line.success {
+      color: #a7f3d0;
+    }
+    .log-line.success .prefix {
+      color: var(--success);
+      font-weight: bold;
+    }
+
+    .log-line.error {
+      color: #fca5a5;
+    }
+    .log-line.error .prefix {
+      color: var(--error);
+      font-weight: bold;
+    }
+
+    .log-line.info {
+      color: #93c5fd;
+    }
+    .log-line.info .prefix {
+      color: var(--info);
+      font-weight: bold;
+    }
+
+    .status-text {
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-top: 5px;
+    }
+    
+    .status-text.ok {
+      color: var(--success);
+    }
+
+    .status-text.failed {
+      color: var(--error);
+    }
+
+    .status-text.pending {
+      color: #fbbf24;
+    }
+
+    /* Spinner Animation */
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.1);
+      border-radius: 50%;
+      border-top-color: currentColor;
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <header>
+      <div class="logo">Lingua<span>Folio</span> API Diagnostics</div>
+      <div class="badges-container">
+        <div class="badge pending" id="badge-backend">
+          <span class="badge-dot"></span>
+          <span>Backend</span>
+        </div>
+        <div class="badge pending" id="badge-auth">
+          <span class="badge-dot"></span>
+          <span>Auth</span>
+        </div>
+        <div class="badge pending" id="badge-payment">
+          <span class="badge-dot"></span>
+          <span>Payment</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="grid">
+      
+      <!-- Steps Column -->
+      <div class="steps-column">
+        
+        <!-- STEP 1 -->
+        <div class="card">
+          <div class="card-title">
+            <span class="step-number">1</span>
+            <span>Backend Health Check</span>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+            Auto-pinging target root health check route on page load.
+          </p>
+          <div id="health-status-wrap">
+            <span class="spinner" id="health-spinner"></span>
+            <span class="status-text pending" id="health-status-text">Pinging health check...</span>
+          </div>
+          <button class="btn" style="margin-top: 1rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: var(--text-primary); box-shadow: none;" onclick="pingHealth()">
+            🔄 Re-ping Health Check
+          </button>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="card">
+          <div class="card-title">
+            <span class="step-number">2</span>
+            <span>User Authentication</span>
+          </div>
+          <form id="login-form" onsubmit="handleLogin(event)">
+            <div class="form-group">
+              <label for="login-email">Email Address</label>
+              <input type="email" id="login-email" placeholder="user@example.com" required value="arjun@email.com">
+            </div>
+            <div class="form-group">
+              <label for="login-password">Password</label>
+              <input type="password" id="login-password" placeholder="••••••••" required>
+            </div>
+            <button class="btn" type="submit" id="btn-login">
+              🔑 Authenticate & Store Token
+            </button>
+          </form>
+          <div id="auth-status-wrap" style="margin-top: 1rem; display: none;">
+            <span class="status-text" id="auth-status-text"></span>
+          </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="card">
+          <div class="card-title">
+            <span class="step-number">3</span>
+            <span>Create Payment Order</span>
+          </div>
+          <form id="order-form" onsubmit="handleCreateOrder(event)">
+            <div class="form-group">
+              <label for="book-id">Book ID (UUID or standard index ID)</label>
+              <input type="text" id="book-id" placeholder="e.g. 1" required value="1">
+            </div>
+            <button class="btn" type="submit" id="btn-order" disabled>
+              💳 Create Order (Requires Auth)
+            </button>
+          </form>
+          <div id="order-status-wrap" style="margin-top: 1rem; display: none;">
+            <span class="status-text" id="order-status-text"></span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Live Console Column -->
+      <div class="card console-card">
+        <div class="console-header">
+          <div class="console-dots">
+            <div class="dot red"></div>
+            <div class="dot yellow"></div>
+            <div class="dot green"></div>
+          </div>
+          <div class="console-title">DIAGNOSTIC TERMINAL LOG</div>
+          <button class="clear-console" onclick="clearConsole()">Clear</button>
+        </div>
+        <div class="console-output" id="console-output"></div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    const API_BASE = "https://linguafolio-production.up.railway.app/api/v1";
+    const HEALTH_URL = "https://linguafolio-production.up.railway.app/health";
+    
+    let authToken = "";
+
+    // Helper functions for logging
+    function logInfo(message) {
+      appendLog("info", `· ${message}`);
+    }
+
+    // Convert potential sensitive error strings or secrets for safe printing
+    function maskSecret(str) {
+      if (!str) return '';
+      if (str.length <= 15) return '***';
+      return str.slice(0, 8) + '...' + str.slice(-8);
+    }
+
+    function logSuccess(message) {
+      appendLog("success", `✓ ${message}`);
+    }
+
+    function logError(message) {
+      appendLog("error", `✗ ${message}`);
+    }
+
+    function appendLog(type, text) {
+      const output = document.getElementById("console-output");
+      const line = document.createElement("div");
+      line.className = `log-line ${type}`;
+      
+      const prefix = document.createElement("span");
+      prefix.className = "prefix";
+      prefix.textContent = text.slice(0, 2) + " ";
+      
+      const content = document.createElement("span");
+      content.textContent = text.slice(2);
+      
+      line.appendChild(prefix);
+      line.appendChild(content);
+      output.appendChild(line);
+      output.scrollTop = output.scrollHeight;
+    }
+
+    function clearConsole() {
+      document.getElementById("console-output").innerHTML = "";
+      logInfo("Diagnostic logs cleared.");
+    }
+
+    // Set badge status helper
+    function updateBadge(id, status) {
+      const el = document.getElementById(`badge-${id}`);
+      el.className = `badge ${status}`;
+    }
+
+    // Step 1: Health Check
+    async function pingHealth() {
+      updateBadge("backend", "pending");
+      document.getElementById("health-spinner").style.display = "inline-block";
+      const statusText = document.getElementById("health-status-text");
+      statusText.className = "status-text pending";
+      statusText.textContent = "Pinging health check...";
+      
+      logInfo(`Sending GET request to ${HEALTH_URL}...`);
+      
+      try {
+        const start = performance.now();
+        const response = await fetch(HEALTH_URL);
+        const duration = Math.round(performance.now() - start);
+        
+        const text = await response.text();
+        
+        if (response.ok) {
+          logSuccess(`Health check responded OK in ${duration}ms: ${text.slice(0, 100)}`);
+          statusText.textContent = "Backend: online ✅";
+          statusText.className = "status-text ok";
+          updateBadge("backend", "ok");
+        } else {
+          logError(`Health check failed with status ${response.status}: ${text.slice(0, 100)}`);
+          statusText.textContent = "Backend: offline ❌ (HTTP Error)";
+          statusText.className = "status-text failed";
+          updateBadge("backend", "failed");
+        }
+      } catch (err) {
+        logError(`Health check failed with CORS/Network error: ${err.message}`);
+        statusText.textContent = "Backend: offline ❌ (Network/CORS error)";
+        statusText.className = "status-text failed";
+        updateBadge("backend", "failed");
+      } finally {
+        document.getElementById("health-spinner").style.display = "none";
+      }
+    }
+
+    // Step 2: Auth Login
+    async function handleLogin(e) {
+      e.preventDefault();
+      
+      const email = document.getElementById("login-email").value.trim();
+      const password = document.getElementById("login-password").value;
+      const btn = document.getElementById("btn-login");
+      const statusWrap = document.getElementById("auth-status-wrap");
+      const statusText = document.getElementById("auth-status-text");
+      
+      btn.disabled = true;
+      statusWrap.style.display = "block";
+      statusText.className = "status-text pending";
+      statusText.innerHTML = '<span class="spinner"></span> Authenticating...';
+      updateBadge("auth", "pending");
+      
+      const loginUrl = `${API_BASE}/auth/login`;
+      logInfo(`Sending POST login request to ${loginUrl} for user: ${email}...`);
+      
+      try {
+        const response = await fetch(loginUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ email, password })
+        });
+        
+        const rawJson = await response.json();
+        
+        if (response.ok) {
+          // Extract token checking all requested pathways:
+          // Try d.data.accessToken, d.data.token, d.token
+          let extractedToken = "";
+          if (rawJson.data && rawJson.data.accessToken) {
+            extractedToken = rawJson.data.accessToken;
+          } else if (rawJson.data && rawJson.data.token) {
+            extractedToken = rawJson.data.token;
+          } else if (rawJson.token) {
+            extractedToken = rawJson.token;
+          } else if (rawJson.accessToken) {
+            extractedToken = rawJson.accessToken;
+          }
+          
+          if (extractedToken) {
+            authToken = extractedToken;
+            logSuccess(`Authentication successful! Token loaded.`);
+            logInfo(`Token prefix: ${authToken.substring(0, 25)}...`);
+            
+            statusText.textContent = `Auth: ok ✅ (${authToken.substring(0, 20)}...)`;
+            statusText.className = "status-text ok";
+            updateBadge("auth", "ok");
+            
+            // Enable Step 3 order button
+            document.getElementById("btn-order").disabled = false;
+          } else {
+            logError("Authentication succeeded but token could not be resolved from JSON response structure.");
+            logInfo(`Raw JSON: ${JSON.stringify(rawJson)}`);
+            statusText.textContent = "Auth: failed ❌ (Missing token in response)";
+            statusText.className = "status-text failed";
+            updateBadge("auth", "failed");
+            document.getElementById("btn-order").disabled = true;
+          }
+        } else {
+          const errMsg = rawJson.error?.message || rawJson.message || `Status Code ${response.status}`;
+          logError(`Authentication failed: ${errMsg}`);
+          logInfo(`Response payload: ${JSON.stringify(rawJson)}`);
+          statusText.textContent = `Auth: failed ❌ (${errMsg})`;
+          statusText.className = "status-text failed";
+          updateBadge("auth", "failed");
+          document.getElementById("btn-order").disabled = true;
+        }
+      } catch (err) {
+        logError(`Authentication network/CORS error: ${err.message}`);
+        statusText.textContent = `Auth: failed ❌ (Network error)`;
+        statusText.className = "status-text failed";
+        updateBadge("auth", "failed");
+        document.getElementById("btn-order").disabled = true;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // Step 3: Create Order
+    async function handleCreateOrder(e) {
+      e.preventDefault();
+      
+      if (!authToken) {
+        logError("Cannot create payment order: authentication token is missing.");
+        alert("Please authenticate in Step 2 first.");
+        return;
+      }
+      
+      const bookId = document.getElementById("book-id").value.trim();
+      const btn = document.getElementById("btn-order");
+      const statusWrap = document.getElementById("order-status-wrap");
+      const statusText = document.getElementById("order-status-text");
+      
+      btn.disabled = true;
+      statusWrap.style.display = "block";
+      statusText.className = "status-text pending";
+      statusText.innerHTML = '<span class="spinner"></span> Creating order...';
+      updateBadge("payment", "pending");
+      
+      const orderUrl = `${API_BASE}/payments/create-order`;
+      logInfo(`Sending POST order request to ${orderUrl} with Book ID: ${bookId}...`);
+      
+      try {
+        const response = await fetch(orderUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${authToken}`
+          },
+          body: JSON.stringify({
+            type: "individual_book",
+            bookId: bookId
+          })
+        });
+        
+        const rawJson = await response.json();
+        
+        if (response.ok) {
+          logSuccess("Order created successfully!");
+          logInfo(`Order Response Details: ${JSON.stringify(rawJson, null, 2)}`);
+          
+          statusText.textContent = `Payment: ok ✅ (Order ID: ${rawJson.data?.orderId || 'created'})`;
+          statusText.className = "status-text ok";
+          updateBadge("payment", "ok");
+        } else {
+          const errMsg = rawJson.error?.message || rawJson.message || `Status Code ${response.status}`;
+          logError(`Order creation failed: ${errMsg}`);
+          logInfo(`Response payload: ${JSON.stringify(rawJson)}`);
+          
+          statusText.textContent = `Payment: failed ❌ (${errMsg})`;
+          statusText.className = "status-text failed";
+          updateBadge("payment", "failed");
+        }
+      } catch (err) {
+        logError(`Order creation network/CORS error: ${err.message}`);
+        statusText.textContent = `Payment: failed ❌ (Network error)`;
+        statusText.className = "status-text failed";
+        updateBadge("payment", "failed");
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // Auto-ping on load
+    window.addEventListener("DOMContentLoaded", () => {
+      logInfo("API diagnostic console initialized.");
+      logInfo(`Target API Base Endpoint: ${API_BASE}`);
+      pingHealth();
+    });
+  </script>
+</body>
+</html>
